@@ -10,14 +10,24 @@ params.Pm.twidth = 10.^m(2,:);
 params.Pm.tcenter = 10.^m(3,:);
 params.Pm.k=m(4,:);
 
-if params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4
+if params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     params.Pm.EaZr = m(6,:);
+end
+if params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 6
     params.Pm.EaAp = m(5,:);
 end
-if params.Pm.DataFlag == 3|| params.Pm.DataFlag == 4
+if params.Pm.DataFlag == 3|| params.Pm.DataFlag == 4 %|| params.Pm.DataFlag == 5
     params.Pm.EaBt=m(7,:);
+end
+if params.Pm.DataFlag == 5
+    params.Pm.EaBt=m(6,:);
+end
+if params.Pm.DataFlag == 3|| params.Pm.DataFlag == 4 %|| params.Pm.DataFlag == 6
     params.Pm.AFTrmr0=m(8,:);
     %params.Pm.ZFTrmr0=m(9,:);
+end
+if params.Pm.DataFlag == 6
+    params.Pm.AFTrmr0=m(6,:);
 end
     
 
@@ -49,17 +59,21 @@ params.Pm.kappa = params.Pm.k/(params.Pm.cp*params.Pm.rho); %thermal diffusivity
 %run thermal diffusion model
 [~,time,theta] = diffusion_1d_dike(params.Pm);
 
-if params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4
+if params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     %run chemical model for each chronometer 
     %zircon
     Zr_agemodel = thermochron_calc(params.data.ZPts,theta,params.Pm.x,time,params.Tm.D0a2_Zr,params.Tm.EaZr,params.Tm.trZ,params.Tm.tiZ,params.Tm,params.Pm,1);
+end
+if params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 6
     %apatite
     Ap_agemodel = thermochron_calc(params.data.APts,theta,params.Pm.x,time,params.Tm.D0a2_Ap,params.Tm.EaAp,params.Tm.trA,params.Tm.tiA,params.Tm,params.Pm,1);
     
 end
-if params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4
+if params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     %biotite
     Bt_agemodel = thermochron_calc(params.data.BPts,theta,params.Pm.x,time,params.Tm.D0a2_Bt,params.Tm.EaBt,params.Tm.trB,params.Tm.tiB,params.Tm,params.Pm,2);
+end
+if params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 6
     %AFT fission track age model
     AFT_agemodel = thermochron_calc(params.data.AFTPts,theta,params.Pm.x,time,params.Pm.AFTrmr0,params.Tm.EaAp,params.Tm.trAFT,params.Tm.tiAFT,params.Tm,params.Pm,3);
 end
@@ -78,20 +92,24 @@ if floor(max(MaxT))>params.Pm.Tliqd+1
 end
 %keyboard
 
-if params.Pm.DataFlag == 2 || params.Pm.DataFlag == 4
+if params.Pm.DataFlag == 2 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     X_MGT = interp1(MaxT(params.Pm.x>params.Pm.DikeThick),params.Pm.x(params.Pm.x>params.Pm.DikeThick),params.Pm.CurieT);
 end
 
 %% calculate residuals
-if  params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4
+if  params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     nll_Z = nlpCalc(Zr_agemodel,params.data.ZrAge,params.data.Zr_covinv,1,nChains);
+end
+if  params.Pm.DataFlag == 1 || params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 6
     nll_A = nlpCalc(Ap_agemodel,params.data.ApAge,params.data.Ap_covinv,1,nChains);
 end
-if  params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4
+if  params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     nll_B = nlpCalc(Bt_agemodel,params.data.BtAge,params.data.Bt_covinv,1,nChains);
+end
+if  params.Pm.DataFlag == 3 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 6
     nll_AFT = nlpCalc(AFT_agemodel,params.data.AFTAge,params.data.AFT_covinv,1,nChains);
 end
-if  params.Pm.DataFlag == 2 || params.Pm.DataFlag == 4
+if  params.Pm.DataFlag == 2 || params.Pm.DataFlag == 4 || params.Pm.DataFlag == 5
     nll_MGT = nlpCalc(X_MGT,params.data.MGTdist,params.data.MGT_covinv,1,nChains);
 end
 
@@ -104,6 +122,10 @@ elseif params.Pm.DataFlag == 3
     nll = nll_Z + nll_A + nll_B + nll_AFT;
 elseif params.Pm.DataFlag == 4
     nll = nll_Z + nll_A + nll_B + nll_AFT + nll_MGT;
+elseif params.Pm.DataFlag == 5
+    nll = nll_Z + nll_B + nll_MGT; 
+elseif params.Pm.DataFlag == 6
+    nll = nll_A + nll_AFT;     
 end
 %disp(nll_G)
 %disp(nll_A)

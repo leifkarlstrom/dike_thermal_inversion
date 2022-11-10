@@ -48,16 +48,19 @@ rng("shuffle")
 %2 = magnetic geothermometry data
 %3 = full suite of multiple chronometers including fission track
 %4 = full suite of thermochronometers + magnatic geothermometry data 
-Pm.DataFlag = 2;
+%5 = High T: MGT + BiAr + ZrHe
+%6 = Low T: ApFT + ApHe
+
+Pm.DataFlag = 5;
 
 %using most recent version of the Jackson A dataset here
 load('JacksonA_meanages_3_2022.mat');
 
 % MCMC Hammer parameters
-nIts = 1e3; %total number of model iterations to be completed in a MCMC chain
-nBurn = 1e2; %number of iterations to discard (as "Burn In"). Typically ~10% of nIts 
+nIts = 2.3e3; %total number of model iterations to be completed in a MCMC chain
+nBurn = 2e3; %number of iterations to discard (as "Burn In"). Typically ~10% of nIts 
 nThin = 1; %only keep every nThin interation, values greater than one represent "thinned" models, helps reduce autocorrelation in chains (sortof)
-updateInt = 5; %how often (after how many iterations) to print out status report
+updateInt = 50; %how often (after how many iterations) to print out status report
 
 Pm.nChains = 1; %number of MCMC chains
 
@@ -123,7 +126,7 @@ end
 
 %% load data, define MCMC parameters
 
-if Pm.DataFlag == 1 || Pm.DataFlag == 3 || Pm.DataFlag == 4
+if Pm.DataFlag == 1 || Pm.DataFlag == 3 || Pm.DataFlag == 4 || Pm.DataFlag == 5 || Pm.DataFlag == 6
     %zircon data
     zhe_dist=zhe_jacka_agemean(:,1);
     zhe_age=zhe_jacka_agemean(:,2);
@@ -157,7 +160,7 @@ if Pm.DataFlag == 1 || Pm.DataFlag == 3 || Pm.DataFlag == 4
     %parameterizes D0^2 in terms of Ea, returns larger Tm
     Tm = fracreset_paramfit(Tm); %for zircon and apatite
 end
-if Pm.DataFlag == 3 || Pm.DataFlag == 4
+if Pm.DataFlag == 3 || Pm.DataFlag == 4 || Pm.DataFlag == 5 || Pm.DataFlag == 6
     %biotite data
     btar_dist=btar_jacka_agemean(:,1);
     btar_age=btar_jacka_agemean(:,2);
@@ -208,9 +211,9 @@ end
 %note that we probably should view these constraints loosely and use the
 %whole range implied between both hanging and footwall measurements - this
 %will increase both the predicted distance and the errors.
-if Pm.DataFlag == 2 || Pm.DataFlag == 4
-    mgt_dist=Pm.DikeThick+(5.4+3.7)/2;  %from Biasi and Karlstrom 2021
-    mgt_err=(5.4-3.7)/2;%assuming error corresponding to range 
+if Pm.DataFlag == 2 || Pm.DataFlag == 4 || Pm.DataFlag == 5
+    mgt_dist=Pm.DikeThick+5.5;  %based on Jackson A dike surveys
+    mgt_err=0.9;%assuming error corresponding to range 
 
     Pm.CurieT = 580; %Curie temperature (C)
     
@@ -222,7 +225,7 @@ end
 %get parameter ranges assuming uniform distributions. 
 %Note that if you change the variables in here you have to also modify the
 %hammer.setparam below
-PmRg = ParameterRanges(Pm); 
+PmRg = ParameterRanges;%(Pm); 
 
 %thermal model parameters
 params.Pm=Pm;
@@ -248,13 +251,17 @@ hammer = hammer.setparam('log10Tc','lims',[log10(PmRg(3,1)) log10(PmRg(3,2))],'t
 hammer = hammer.setparam('k','lims',[(PmRg(4,1)) (PmRg(4,2))],'title','thermal conductivity k');
 
 
-if Pm.DataFlag == 1 || Pm.DataFlag == 3 || Pm.DataFlag == 4
+if Pm.DataFlag == 1 || Pm.DataFlag == 3 || Pm.DataFlag == 4 || Pm.DataFlag == 5 
 hammer = hammer.setparam('Ea_Z','lims',[PmRg(6,1) PmRg(6,2)],'title','Ea Zr');
+end
+if Pm.DataFlag == 1 || Pm.DataFlag == 3 || Pm.DataFlag == 4 || Pm.DataFlag == 6
 hammer = hammer.setparam('Ea_A','lims',[PmRg(5,1) PmRg(5,2)],'title','Ea Ap');
 end
 
-if Pm.DataFlag == 3 || Pm.DataFlag == 4
+if Pm.DataFlag == 3 || Pm.DataFlag == 4 || Pm.DataFlag == 5
 hammer = hammer.setparam('Ea_B','lims',[PmRg(7,1) PmRg(7,2)],'title','Ea Bt');
+end
+if Pm.DataFlag == 3 || Pm.DataFlag == 4 || Pm.DataFlag == 6
 hammer = hammer.setparam('rmr0_AFT','lims',[PmRg(8,1) PmRg(8,2)],'title','AFT rmr0');
 end
 
