@@ -6,7 +6,7 @@ Inversion uses the MCMCHammer markov chain monte carlo code of Kyle Anderson: ht
 
 Forward model is standalone matlab code, finite differences on non-uniform grid with multicomponent (dike+host rock) conduction and melting.
 
-Datasets currently supported: (U-Th)/He partial resetting in Ap and Zr, Bi/Ar partial resetting, magnetic resetting
+Datasets that have been inverted with this model: (U-Th)/He partial resetting in Ap and Zr, Bt/Ar partial resetting, magnetic resetting, Ap fission track
 
 
 
